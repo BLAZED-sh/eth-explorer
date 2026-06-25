@@ -1,0 +1,307 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Self-hosted fonts ─────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Satoshi';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('/fonts/satoshi-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+/* ── Base ──────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    --muted-text: rgba(255, 255, 255, 0.5);
+    --muted-label: rgba(255, 255, 255, 0.55);
+    --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  html {
+    background-color: #000808;
+  }
+  body {
+    @apply bg-bg text-neutral-100 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ── Components ────────────────────────────────────────────────── */
+
+@layer components {
+  /* Sparse legacy card — most surfaces are flat sections now */
+  .panel {
+    @apply rounded-xl border border-accent/15 bg-gradient-to-br from-card-from to-card-to;
+    box-shadow: 0 8px 24px rgba(0, 4, 4, 0.45);
+  }
+  .panel-hover {
+    @apply transition-all duration-300;
+  }
+  .panel-hover:hover {
+    @apply border-accent/40;
+  }
+
+  /* Section label: small cyan uppercase */
+  .label {
+    @apply text-xs font-semibold uppercase tracking-widest text-accent/70;
+  }
+  .muted {
+    color: var(--muted-text);
+  }
+
+  /* Flat cockpit section: 1px rule + uppercase header */
+  .section-rule {
+    @apply border-t border-accent/15 pt-4;
+  }
+
+  /* Table conventions */
+  .thead-row {
+    @apply text-xs font-semibold uppercase tracking-wider text-accent;
+  }
+  .trow {
+    @apply border-b border-accent/10 transition-colors duration-150;
+  }
+  .trow:hover {
+    @apply bg-accent/5;
+  }
+}
+
+/* Staggered load-in waterfall: parent gets .stagger, children get --i */
+.stagger > * {
+  opacity: 0;
+  animation: stagger-in 0.5s var(--ease-spring) forwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Atmosphere layers ─────────────────────────────────────────── */
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(44, 209, 209, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(44, 209, 209, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  opacity: 0.04;
+}
+
+.bg-vignette {
+  background: radial-gradient(ellipse 90% 90% at center,
+    transparent 0%,
+    transparent 35%,
+    rgba(0, 5, 5, 0.04) 50%,
+    rgba(0, 4, 4, 0.10) 65%,
+    rgba(0, 3, 3, 0.18) 78%,
+    rgba(0, 1, 1, 0.30) 90%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Liquid glass: blur + 1px edge refraction (inner top highlight) */
+.glass-effect {
+  background: rgba(0, 14, 14, 0.78);
+  border-bottom: 1px solid rgba(44, 209, 209, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* ── Text gradients ────────────────────────────────────────────── */
+
+.text-gradient {
+  background: linear-gradient(135deg, #2CD1D1 0%, #36E2E2 25%, #00AAAA 50%, #2CD1D1 75%, #36E2E2 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: brightness(1.1) contrast(1.2);
+}
+
+.text-gradient-ethereum {
+  background: linear-gradient(135deg, #627EEA 0%, #8A92B2 25%, #627EEA 50%, #8A92B2 75%, #627EEA 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow effects ──────────────────────────────────────────────── */
+
+@keyframes epic-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(44, 209, 209, 0.4),
+      0 0 40px rgba(44, 209, 209, 0.2),
+      0 0 60px rgba(44, 209, 209, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(44, 209, 209, 0.6),
+      0 0 60px rgba(44, 209, 209, 0.3),
+      0 0 80px rgba(44, 209, 209, 0.15);
+  }
+}
+
+.animate-epic-glow {
+  animation: epic-glow 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Skeleton loading bar */
+.skeleton {
+  @apply relative overflow-hidden rounded bg-accent/5;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(44, 209, 209, 0.08), transparent);
+  animation: shimmer 1.6s infinite;
+}
+
+/* ── Live feed row transitions (vue TransitionGroup name="feed") ── */
+
+.feed-enter-active {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.feed-enter-from {
+  opacity: 0;
+  transform: translateY(-14px);
+}
+.feed-leave-active {
+  transition: all 0.25s ease;
+  position: absolute;
+  width: 100%;
+}
+.feed-leave-to {
+  opacity: 0;
+}
+.feed-move {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Fresh row: brief cyan edge flash */
+@keyframes row-flash {
+  0% { background-color: rgba(44, 209, 209, 0.16); box-shadow: inset 2px 0 0 #2CD1D1; }
+  100% { background-color: transparent; box-shadow: inset 2px 0 0 transparent; }
+}
+.row-flash {
+  animation: row-flash 1.2s ease-out;
+}
+
+/* Row just mined: green flash before it fades out */
+@keyframes row-mined {
+  0%, 60% { background-color: rgba(74, 222, 128, 0.14); box-shadow: inset 2px 0 0 #4ade80; opacity: 1; }
+  100% { background-color: transparent; box-shadow: none; opacity: 0.25; }
+}
+.row-mined {
+  animation: row-mined 1.4s ease-out forwards;
+}
+
+/* Confirmed-tab rows: persistent subtle green left accent */
+.row-confirmed {
+  box-shadow: inset 2px 0 0 rgba(74, 222, 128, 0.35);
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(44, 209, 209, 0.3) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 31, 31, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(44, 209, 209, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(44, 209, 209, 0.5);
+}
+
+/* ── Number ticker (gas gauges) ────────────────────────────────── */
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Mobile & reduced motion ───────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .bg-grain,
+  .bg-vignette {
+    display: none;
+  }
+  .animate-epic-glow,
+  .animate-glow {
+    animation: none !important;
+    box-shadow: none !important;
+  }
+  .text-gradient,
+  .text-gradient-ethereum {
+    filter: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-epic-glow,
+  .animate-glow,
+  .animate-pulse-dot,
+  .skeleton::after,
+  .row-flash,
+  .row-mined,
+  .stagger > * {
+    animation: none !important;
+  }
+  .stagger > * {
+    opacity: 1 !important;
+  }
+  .feed-enter-active,
+  .feed-move,
+  .feed-leave-active {
+    transition: none !important;
+  }
+}

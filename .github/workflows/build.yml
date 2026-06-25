@@ -1,0 +1,55 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # Cache on PR/branch CI for speed; disabled on release tags so the
+          # published binary never restores a cache a PR could have influenced.
+          cache: ${{ startsWith(github.ref, 'refs/tags/') && '' || 'npm' }}
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          # Same rationale: no cache restore on release-tag builds.
+          cache: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+      - name: Build binary
+        env:
+          CGO_ENABLED: 0
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          go build -trimpath -ldflags "-s -w" \
+            -o blazed-explorer-linux-${{ matrix.goarch }} ./cmd/server
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blazed-explorer-linux-${{ matrix.goarch }}
+          path: blazed-explorer-linux-${{ matrix.goarch }}
+          if-no-files-found: error

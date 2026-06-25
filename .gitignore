@@ -1,0 +1,16 @@
+# binaries
+/blazed-explorer
+/dist
+
+# database
+*.db
+*.db-wal
+*.db-shm
+
+# env
+.env
+
+# frontend
+web/node_modules/
+web/dist/*
+!web/dist/.gitkeep

@@ -1,0 +1,11 @@
+.git
+.github
+explorer.db
+explorer.db-shm
+explorer.db-wal
+*.db
+web/node_modules
+web/dist
+blazed-explorer
+blazed-explorer-linux-*
+.env
