@@ -3,12 +3,6 @@
 # 🔥 BLAZED.sh RPC ETH Explorer
 
 <p>Simplistic Ethereum Block/TX Explorer that only relies on an RPC connection.</p>
-
-<br />
-
-<img src="docs/demo.gif" alt="BLAZED Explorer live demo" width="860" />
-
-<br />
 <br />
 
 <table>
