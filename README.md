@@ -1,26 +1,36 @@
 <div align="center">
 
-# 🔥 BLAZED.sh RPC ETH Explorer
+<h1>
+  <img src="docs/logo.png" alt="" width="40" height="40" align="top" />
+  BLAZED.sh RPC ETH Explorer
+</h1>
 
-<p>Simplistic Ethereum Block/TX Explorer that only relies on an RPC connection.</p>
+<p>Simplistic Ethereum Block/TX/Contract Explorer that only relies on an RPC connection.</p>
 <br />
 
 <table>
   <tr>
-    <td align="center" width="33%">
+    <td align="center" width="50%">
       <img src="docs/screenshot-dashboard.png" alt="Dashboard" width="100%" /><br />
       <b>Dashboard</b><br />
       <sub>Live mempool stream &amp; gas</sub>
     </td>
-    <td align="center" width="33%">
+    <td align="center" width="50%">
       <img src="docs/screenshot-block.png" alt="Block view" width="100%" /><br />
       <b>Block</b><br />
       <sub>Full block &amp; tx breakdown</sub>
     </td>
-    <td align="center" width="33%">
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/screenshot-transaction.png" alt="Transaction view" width="100%" /><br />
       <b>Transaction</b><br />
       <sub>Decoded calls, logs &amp; fees</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshot-contract.png" alt="Contract view" width="100%" /><br />
+      <b>Contract</b><br />
+      <sub>EVM bytecode of contracts</sub>
     </td>
   </tr>
 </table>
@@ -29,7 +39,7 @@
 
 ---
 
-Simplistic Ethereum Block/TX Explorer Backend + Frontend that only relies on a RPC connection.
+Simplistic Ethereum Block/TX/Contract Explorer Backend + Frontend that only relies on a RPC connection.
 Backend does the RPC requests and stores data in a simple SQLite, live data is provided via WS.
 
 ## Features
@@ -39,6 +49,7 @@ Backend does the RPC requests and stores data in a simple SQLite, live data is p
 - Real-time gas tracking and mempool charts
 - Search across blocks, txs and addresses
 - Decoded calls, event logs and fee breakdowns
+- Inspect the EVM bytecode of deployed contracts
 - Single static binary with embedded frontend, no external services beyond your node
 - Configurable retention with automatic pruning
 
