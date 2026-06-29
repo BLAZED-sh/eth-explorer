@@ -86,3 +86,50 @@ make dev-web           # vite dev server on :5173 (proxies /api and /ws)
 | `DB_PATH` | `./explorer.db` | SQLite database path |
 | `RETENTION_HOURS` | `48` | prune txs older than this |
 | `MAX_POOL` | `10000` | in-memory pending pool cap |
+| `ALLOW_ORIGINS` | _(empty)_ | comma-separated CORS allowlist for API/WS; only needed for cross-origin frontends. `*` allows any |
+| `TLS_CERT_FILE` | _(empty)_ | path to a TLS cert (PEM); takes precedence over ACME |
+| `TLS_KEY_FILE` | _(empty)_ | path to the matching TLS private key (PEM) |
+| `ACME_ENABLED` | `false` | obtain a Let's Encrypt cert via manual dns-01 |
+| `DOMAIN` | _(empty)_ | hostname for the ACME cert (required when `ACME_ENABLED`) |
+| `ACME_EMAIL` | _(empty)_ | contact email for expiry notices (optional) |
+| `CERT_CACHE` | `./certs` | dir where issued certs + account key are cached |
+| `ACME_DNS_WAIT` | `600` | seconds to wait for the TXT record before validating |
+| `ACME_DIRECTORY` | _(empty)_ | ACME directory URL; empty = LE production, set staging URL to test |
+
+## HTTPS
+
+The server speaks plain HTTP by default. To serve HTTPS, either point it at your own cert:
+
+```sh
+TLS_CERT_FILE=/path/fullchain.pem TLS_KEY_FILE=/path/privkey.pem ./blazed-explorer
+```
+
+…or let it obtain a Let's Encrypt cert via a **manual dns-01** flow (no port 80 / inbound
+needed — the cert is bound to the hostname, so `LISTEN_ADDR` can be any port):
+
+```sh
+ACME_ENABLED=true DOMAIN=explorer.example.com ACME_EMAIL=you@example.com ./blazed-explorer
+```
+
+On first run it logs a `_acme-challenge.<domain>` TXT record for you to create, waits
+`ACME_DNS_WAIT` seconds, then validates and issues. The cert is cached in `CERT_CACHE` and
+reused on restart (re-issued within 30 days of expiry). Use the LE staging `ACME_DIRECTORY`
+while testing to avoid rate limits.
+
+## Pointing the frontend at a remote backend
+
+By default the frontend uses same-origin relative paths, so it just works when served by the
+backend binary. To host the frontend separately, bake the backend location in at build time
+(Vite env vars, see `web/.env.example`):
+
+```sh
+cd web
+VITE_API_BASE=https://api.example.com npm run build
+# VITE_WS_URL is optional; defaults to the WS endpoint derived from VITE_API_BASE
+```
+
+Then run the backend with the frontend's origin allowed for CORS:
+
+```sh
+ALLOW_ORIGINS=https://explorer.example.com ./blazed-explorer
+```

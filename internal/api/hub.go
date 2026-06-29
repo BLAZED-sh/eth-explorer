@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -38,15 +39,36 @@ type Hub struct {
 	hello Helloer
 }
 
-func NewHub() *Hub {
+func NewHub(allowOrigins []string) *Hub {
+	oc := newOriginChecker(allowOrigins)
 	return &Hub{
-		// Same-origin in prod (embedded SPA) and Vite proxy in dev, so any
-		// origin is acceptable here.
-		upgrader:   websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }, ReadBufferSize: 1024, WriteBufferSize: 16 * 1024},
+		upgrader: websocket.Upgrader{
+			CheckOrigin:     checkOrigin(oc),
+			ReadBufferSize:  1024,
+			WriteBufferSize: 16 * 1024,
+		},
 		clients:    make(map[*client]struct{}),
 		register:   make(chan *client, 16),
 		unregister: make(chan *client, 16),
 		broadcast:  make(chan []byte, 256),
+	}
+}
+
+// checkOrigin guards WebSocket upgrades. With no allowlist any origin is
+// accepted (same-origin in prod, Vite proxy in dev). With an allowlist it
+// permits listed origins plus same-origin requests; non-browser clients that
+// send no Origin header are always allowed.
+func checkOrigin(oc originChecker) func(*http.Request) bool {
+	return func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		if origin == "" || oc.allows(origin) {
+			return true
+		}
+		// Same-origin: the Origin host matches the request host.
+		if u, err := url.Parse(origin); err == nil && u.Host == r.Host {
+			return true
+		}
+		return false
 	}
 }
 

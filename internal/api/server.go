@@ -17,7 +17,7 @@ type Server struct {
 	startedAt time.Time
 }
 
-func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS) http.Handler {
+func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allowOrigins []string) http.Handler {
 	s := &Server{st: st, feed: feed, hub: hub, startedAt: time.Now()}
 
 	mux := http.NewServeMux()
@@ -37,7 +37,36 @@ func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS) http
 	mux.HandleFunc("GET /ws", hub.ServeWS)
 	mux.Handle("GET /", spaHandler(webDist))
 
-	return mux
+	return corsMiddleware(allowOrigins, mux)
+}
+
+// corsMiddleware adds CORS headers (and answers preflight requests) for the
+// configured allowed origins. With no allowed origins it is a no-op: prod is
+// same-origin and dev uses the Vite proxy, so no cross-origin headers are
+// needed. Wrapping the whole mux lets it answer OPTIONS preflight before the
+// method-scoped routes would reject it.
+func corsMiddleware(allowOrigins []string, next http.Handler) http.Handler {
+	if len(allowOrigins) == 0 {
+		return next
+	}
+	oc := newOriginChecker(allowOrigins)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" && oc.allows(origin) {
+			if oc.allowAll {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			} else {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Add("Vary", "Origin")
+			}
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		}
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // spaHandler serves the embedded frontend build; paths without a matching

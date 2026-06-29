@@ -10,6 +10,9 @@
 # env
 .env
 
+# tls cert cache (ACME dns-01)
+/certs
+
 # frontend
 web/node_modules/
 web/dist/*

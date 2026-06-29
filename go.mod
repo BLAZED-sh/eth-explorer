@@ -7,6 +7,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/rs/zerolog v1.35.1
+	golang.org/x/crypto v0.47.0
 	gorm.io/gorm v1.31.1
 )
 

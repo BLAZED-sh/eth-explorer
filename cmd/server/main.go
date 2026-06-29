@@ -36,7 +36,7 @@ func main() {
 	go st.RunWriter(ctx)
 	go st.RunPruner(ctx, cfg.Retention)
 
-	hub := api.NewHub()
+	hub := api.NewHub(cfg.AllowOrigins)
 	go hub.Run()
 
 	// The node may not be up yet; keep retrying until it is.
@@ -63,7 +63,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    cfg.ListenAddr,
-		Handler: api.NewServer(st, feed, hub, dist),
+		Handler: api.NewServer(st, feed, hub, dist, cfg.AllowOrigins),
 	}
 	go func() {
 		<-ctx.Done()
@@ -72,7 +72,34 @@ func main() {
 		_ = srv.Shutdown(shutCtx)
 	}()
 
-	log.Info().Str("addr", cfg.ListenAddr).Msg("listening")
+	// A Let's Encrypt cert is bound to the hostname, not a port, so the TLS
+	// listener (cfg.ListenAddr) can be any port. When ACME is enabled we obtain
+	// the cert in-process via a MANUAL dns-01 flow: on first run (or when the
+	// cached cert is near expiry) the server logs the TXT record to create,
+	// waits ACME_DNS_WAIT for you to add it, then validates and issues. A valid
+	// cached cert in CERT_CACHE is reused on restart with no wait. Explicit
+	// TLS_CERT_FILE / TLS_KEY_FILE take precedence and skip ACME.
+	certFile, keyFile := cfg.TLSCertFile, cfg.TLSKeyFile
+	if certFile == "" && cfg.ACMEEnabled {
+		if cfg.Domain == "" {
+			log.Fatal().Msg("ACME_ENABLED requires DOMAIN to be set")
+		}
+		c, k, err := ensureCert(ctx, cfg.CertCache, cfg.Domain, cfg.ACMEEmail, cfg.ACMEDirectory, cfg.ACMEDNSWait)
+		if err != nil {
+			log.Fatal().Err(err).Msg("acme dns-01 failed")
+		}
+		certFile, keyFile = c, k
+	}
+
+	if certFile != "" && keyFile != "" {
+		log.Info().Str("addr", cfg.ListenAddr).Str("cert", certFile).Msg("listening (https)")
+		if err := srv.ListenAndServeTLS(certFile, keyFile); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal().Err(err).Msg("server failed")
+		}
+		return
+	}
+
+	log.Info().Str("addr", cfg.ListenAddr).Msg("listening (http)")
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal().Err(err).Msg("server failed")
 	}

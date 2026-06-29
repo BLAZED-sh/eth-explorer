@@ -2,8 +2,12 @@ import type {
   BlockMsg, ContractCode, GasNow, HistoryPoint, SearchResult, TxDetail, TxLite,
 } from "./types";
 
+// Prefix for REST calls. Empty (default) keeps same-origin relative paths;
+// set VITE_API_BASE at build time to target a backend on another origin.
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(path);
+  const res = await fetch(API_BASE + path);
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `HTTP ${res.status}`);

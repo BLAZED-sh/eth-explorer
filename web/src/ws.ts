@@ -6,8 +6,15 @@ let backoff = 1000;
 let reconnectTimer: number | undefined;
 
 function wsURL(): string {
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  return `${proto}://${location.host}/ws`;
+  // Explicit override baked in at build time.
+  if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+
+  // Otherwise derive from the REST base when it points at another origin,
+  // falling back to the page origin (same-origin / dev-proxy default).
+  const apiBase = import.meta.env.VITE_API_BASE;
+  const origin = apiBase && /^https?:\/\//i.test(apiBase) ? new URL(apiBase) : location;
+  const proto = origin.protocol === "https:" ? "wss" : "ws";
+  return `${proto}://${origin.host}/ws`;
 }
 
 export function connect() {
