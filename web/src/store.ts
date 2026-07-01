@@ -26,6 +26,12 @@ export function onBlock(fn: BlockListener): () => void {
   return () => blockListeners.delete(fn);
 }
 
+/** Keep the first occurrence of each hash, preserving order. */
+function dedupeByHash(txs: TxLite[]): TxLite[] {
+  const seen = new Set<string>();
+  return txs.filter((tx) => (seen.has(tx.hash) ? false : (seen.add(tx.hash), true)));
+}
+
 export const store = reactive({
   connected: false,
   chainId: 0,
@@ -53,7 +59,7 @@ export function applyHello(chainId: number, head: number, gas: GasNow, blocks: B
   store.gas = gas;
   store.blocks = blocks.slice(0, BLOCK_CAP);
   // hello txs arrive oldest-first; the feed renders newest-first
-  store.feed = txs.slice().reverse().slice(0, FEED_CAP);
+  store.feed = dedupeByHash(txs.slice().reverse()).slice(0, FEED_CAP);
   store.pausedBuffer = [];
   store.justMined.clear();
 
@@ -69,11 +75,30 @@ export function applyHello(chainId: number, head: number, gas: GasNow, blocks: B
 export function applyPendingBatch(txs: TxLite[]) {
   pendingBatchListeners.forEach((fn) => fn(txs));
   if (document.hidden) return; // don't churn the DOM in background tabs
+
+  // Drop hashes we're already showing (in the feed) or holding (paused buffer).
+  // The node re-announces txs — on a pending resubscribe replay, during a reorg,
+  // or when a just-mined row is still in its retire window — and a duplicate
+  // :key silently freezes rows in the TransitionGroup so they stop updating.
+  // Guarding here keeps the existing (possibly mid-flash) row and ignores the
+  // echo. Also dedupes within the incoming batch itself.
+  const known = new Set<string>([
+    ...store.feed.map((t) => t.hash),
+    ...store.pausedBuffer.map((t) => t.hash),
+  ]);
+  const fresh: TxLite[] = [];
+  for (const tx of txs.slice().reverse()) {
+    if (known.has(tx.hash)) continue;
+    known.add(tx.hash);
+    fresh.push(tx);
+  }
+  if (!fresh.length) return;
+
   if (store.paused) {
-    store.pausedBuffer = [...txs.slice().reverse(), ...store.pausedBuffer].slice(0, FEED_CAP);
+    store.pausedBuffer = [...fresh, ...store.pausedBuffer].slice(0, FEED_CAP);
     return;
   }
-  store.feed = [...txs.slice().reverse(), ...store.feed].slice(0, FEED_CAP);
+  store.feed = [...fresh, ...store.feed].slice(0, FEED_CAP);
 }
 
 export function applyBlock(block: BlockMsg, minedHashes: string[], gas: GasNow) {
@@ -123,7 +148,7 @@ export function applyStats(s: StatsMsg) {
 export function setPaused(p: boolean) {
   store.paused = p;
   if (!p && store.pausedBuffer.length) {
-    store.feed = [...store.pausedBuffer, ...store.feed].slice(0, FEED_CAP);
+    store.feed = dedupeByHash([...store.pausedBuffer, ...store.feed]).slice(0, FEED_CAP);
     store.pausedBuffer = [];
   }
 }
