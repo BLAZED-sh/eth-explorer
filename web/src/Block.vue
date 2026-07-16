@@ -5,6 +5,7 @@ import { api } from "./api";
 import type { BlockMsg, TxLite } from "./types";
 import { fmtGwei, fmtNum, fmtTime } from "./format";
 import { builderName } from "./builders";
+import { usePageMeta } from "./usePageMeta";
 import HashLink from "./components/HashLink.vue";
 import TxTable from "./components/TxTable.vue";
 
@@ -14,6 +15,25 @@ const id = computed(() => String(route.params.id));
 const block = ref<BlockMsg | null>(null);
 const txs = ref<TxLite[]>([]);
 const error = ref("");
+
+usePageMeta(() => {
+  if (error.value) {
+    return {
+      title: "Block Not Found · Blazed Explorer",
+      description: `Ethereum block ${id.value} could not be loaded on Blazed Explorer.`,
+      canonicalPath: null,
+      robots: "noindex",
+    };
+  }
+  const b = block.value;
+  return {
+    title: `Ethereum Block #${id.value} · Blazed Explorer`,
+    description: b
+      ? `Ethereum block #${fmtNum(b.number)} mined ${fmtTime(b.timestamp)}: ${b.txCount} transactions, ${fmtNum(b.gasUsed)} gas used (${(b.utilization * 100).toFixed(1)}% of limit), base fee ${fmtGwei(b.baseFeeGwei)} gwei, built by ${builderName(b.miner).name}.`
+      : `Details for Ethereum block ${id.value}: transactions, gas usage, base fee, and builder.`,
+    canonicalPath: `/block/${id.value}`,
+  };
+});
 
 async function load() {
   error.value = "";

@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { store } from "./store";
+import { usePageMeta, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from "./usePageMeta";
 import MempoolHero from "./components/MempoolHero.vue";
 import LiveTxFeed from "./components/LiveTxFeed.vue";
 import BlockRow from "./components/BlockRow.vue";
 import MempoolChart from "./components/MempoolChart.vue";
+
+usePageMeta({
+  title: DEFAULT_TITLE,
+  description: DEFAULT_DESCRIPTION,
+  canonicalPath: "/",
+});
 </script>
 
 <template>

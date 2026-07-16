@@ -3,7 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { api } from "./api";
 import type { TxDetail } from "./types";
-import { fmtDuration, fmtEth, fmtNum, txTypeLabel } from "./format";
+import { fmtDuration, fmtEth, fmtNum, shortAddr, shortHash, txTypeLabel } from "./format";
+import { usePageMeta } from "./usePageMeta";
 import { formatEthExact, gweiToWei, trimDecimals } from "./decode";
 import HashLink from "./components/HashLink.vue";
 import StatusBadge from "./components/StatusBadge.vue";
@@ -41,6 +42,29 @@ watch(hash, () => {
 onBeforeUnmount(() => clearTimeout(pollTimer));
 
 const tx = computed(() => detail.value?.tx ?? null);
+
+usePageMeta(() => {
+  if (error.value) {
+    return {
+      title: "Transaction Not Found · Blazed Explorer",
+      description: `Ethereum transaction ${hash.value} could not be loaded on Blazed Explorer.`,
+      canonicalPath: null,
+      robots: "noindex",
+    };
+  }
+  const t = tx.value;
+  let description = `Status, value, gas fees, and decoded calldata for Ethereum transaction ${hash.value}.`;
+  if (t) {
+    const dest = t.to ? `to ${shortAddr(t.to)}` : "creating a contract";
+    const mined = t.blockNumber !== null ? ` in block #${t.blockNumber}` : "";
+    description = `Ethereum transaction ${shortHash(t.hash)} (${t.status}${mined}): ${fmtEth(t.valueEth)} ETH from ${shortAddr(t.from)} ${dest}, with gas fees and decoded calldata.`;
+  }
+  return {
+    title: `Ethereum Tx ${shortHash(hash.value, 10, 8)} · Blazed Explorer`,
+    description,
+    canonicalPath: `/tx/${hash.value.toLowerCase()}`,
+  };
+});
 
 // Pending estimate: max cost ≤ gasLimit × maxFee (or gasPrice for legacy).
 const maxCostEth = computed(() => {

@@ -16,6 +16,9 @@ type Config struct {
 	Retention    time.Duration
 	MaxPool      int
 	AllowOrigins []string
+	// SiteURL is the public origin URLs in generated sitemaps (and host
+	// comparisons) are built against, without a trailing slash.
+	SiteURL string
 
 	// TLS / ACME. Explicit cert files take precedence; otherwise, when
 	// ACMEEnabled, a cert is obtained via a manual dns-01 flow and cached.
@@ -39,6 +42,7 @@ func Load() Config {
 		Retention:    time.Duration(getenvInt("RETENTION_HOURS", 48)) * time.Hour,
 		MaxPool:      getenvInt("MAX_POOL", 10000),
 		AllowOrigins: getenvList("ALLOW_ORIGINS"),
+		SiteURL:      strings.TrimSuffix(getenv("SITE_URL", "https://explorer.blazed.sh"), "/"),
 
 		TLSCertFile:   os.Getenv("TLS_CERT_FILE"),
 		TLSKeyFile:    os.Getenv("TLS_KEY_FILE"),

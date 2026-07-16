@@ -61,6 +61,24 @@ func (s *Store) Blocks(limit int, before uint64) ([]models.Block, error) {
 	return blocks, err
 }
 
+// BlockSitemapEntry is the minimal projection needed to build sitemap URLs.
+type BlockSitemapEntry struct {
+	Number    uint64
+	Timestamp time.Time
+}
+
+// BlockSitemapEntries returns number+timestamp for the newest blocks, newest
+// first, capped at limit.
+func (s *Store) BlockSitemapEntries(limit int) ([]BlockSitemapEntry, error) {
+	var rows []BlockSitemapEntry
+	err := s.DB.Model(&models.Block{}).
+		Select("number, timestamp").
+		Order("number DESC").
+		Limit(limit).
+		Scan(&rows).Error
+	return rows, err
+}
+
 func (s *Store) BlockByNumber(num uint64) (*models.Block, error) {
 	var b models.Block
 	if err := s.DB.Where("number = ?", num).First(&b).Error; err != nil {

@@ -2,15 +2,100 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/blazed-mark.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Live Ethereum mempool explorer — pending transactions, gas prices, and blocks in real time." />
-    <title>blazed explorer — live Ethereum mempool</title>
+
+    <!-- Google Tag Manager -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(['consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        wait_for_update: 500,
+      }]);
+      (function(w,d,s,l,i){
+        if (!i || i.indexOf('GTM-') !== 0) return;
+        w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
+        var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+        j.async=true;j.src='https://sg.blazed.sh/gtm.js?id='+i+dl;
+        f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-T53HLVW3');
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Primary meta -->
+    <title>Blazed Explorer · Live Ethereum Block & Mempool Explorer</title>
+    <meta name="description" content="Explore Ethereum in real time: live mempool with pending transactions, blocks, gas prices, transaction and address details, plus contract decompilation. Powered by BLAZED.sh dedicated Ethereum nodes." />
+    <meta name="keywords" content="ethereum explorer, block explorer, mempool explorer, pending transactions, ethereum blocks, eth gas tracker, transaction lookup, address lookup, contract decompiler, evm bytecode, real-time ethereum, blockchain explorer, web3" />
+    <meta name="author" content="BLAZED.sh" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#000808" />
+    <link rel="canonical" href="https://explorer.blazed.sh/" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="/blazed-mark.png" />
+    <link rel="apple-touch-icon" href="/blazed-mark.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BLAZED.sh" />
+    <meta property="og:url" content="https://explorer.blazed.sh/" />
+    <meta property="og:title" content="Blazed Explorer · Live Ethereum Block & Mempool Explorer" />
+    <meta property="og:description" content="Explore Ethereum in real time: live mempool, blocks, gas prices, transaction and address details, plus contract decompilation. Powered by BLAZED.sh dedicated nodes." />
+    <meta property="og:image" content="https://blazed.sh/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Blazed Explorer, the live Ethereum block and mempool explorer by BLAZED.sh" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@blazed_sh" />
+    <meta name="twitter:url" content="https://explorer.blazed.sh/" />
+    <meta name="twitter:title" content="Blazed Explorer · Live Ethereum Block & Mempool Explorer" />
+    <meta name="twitter:description" content="Explore Ethereum in real time: live mempool, blocks, gas prices, transaction and address details, plus contract decompilation. Powered by BLAZED.sh dedicated nodes." />
+    <meta name="twitter:image" content="https://blazed.sh/og.png" />
+    <meta name="twitter:image:alt" content="Blazed Explorer, the live Ethereum block and mempool explorer by BLAZED.sh" />
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Blazed Explorer",
+      "url": "https://explorer.blazed.sh/",
+      "description": "A live Ethereum block and mempool explorer showing pending transactions, blocks, gas prices, transaction and address details, and contract decompilation, powered by BLAZED.sh dedicated Ethereum nodes.",
+      "applicationCategory": "BrowserApplication",
+      "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript and WebSocket support",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "BLAZED.sh",
+        "url": "https://blazed.sh",
+        "sameAs": [
+          "https://github.com/BLAZED-sh",
+          "https://x.com/blazed_sh"
+        ]
+      }
+    }
+    </script>
+
     <link rel="preload" href="/fonts/satoshi-variable.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://sg.blazed.sh/ns.html?id=GTM-T53HLVW3" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
   </body>
 </html>

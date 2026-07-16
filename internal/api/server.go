@@ -3,6 +3,7 @@ package api
 import (
 	"io/fs"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -15,10 +16,17 @@ type Server struct {
 	feed      *ingest.Feed
 	hub       *Hub
 	startedAt time.Time
+	siteURL   string
 }
 
-func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allowOrigins []string) http.Handler {
-	s := &Server{st: st, feed: feed, hub: hub, startedAt: time.Now()}
+func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allowOrigins []string, siteURL string) http.Handler {
+	s := &Server{
+		st:        st,
+		feed:      feed,
+		hub:       hub,
+		startedAt: time.Now(),
+		siteURL:   strings.TrimSuffix(siteURL, "/"),
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/txs", s.handleTxs)
@@ -35,7 +43,8 @@ func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allo
 		w.WriteHeader(http.StatusOK)
 	})
 	mux.HandleFunc("GET /ws", hub.ServeWS)
-	mux.Handle("GET /", spaHandler(webDist))
+	mux.HandleFunc("GET /sitemap-blocks.xml", s.handleBlocksSitemap)
+	mux.Handle("GET /", s.spaHandler(webDist))
 
 	return corsMiddleware(allowOrigins, mux)
 }
@@ -70,10 +79,19 @@ func corsMiddleware(allowOrigins []string, next http.Handler) http.Handler {
 }
 
 // spaHandler serves the embedded frontend build; paths without a matching
-// file fall back to index.html for client-side routing.
-func spaHandler(dist fs.FS) http.Handler {
+// file fall back to index.html for client-side routing. Requests reaching
+// this copy under any host other than the canonical site get X-Robots-Tag
+// noindex, so the embedded duplicate never competes with the public frontend.
+func (s *Server) spaHandler(dist fs.FS) http.Handler {
 	fileServer := http.FileServerFS(dist)
+	canonicalHost := ""
+	if u, err := url.Parse(s.siteURL); err == nil {
+		canonicalHost = u.Host
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if canonicalHost != "" && r.Host != canonicalHost {
+			w.Header().Set("X-Robots-Tag", "noindex")
+		}
 		path := strings.TrimPrefix(r.URL.Path, "/")
 		if path != "" {
 			if f, err := dist.Open(path); err == nil {

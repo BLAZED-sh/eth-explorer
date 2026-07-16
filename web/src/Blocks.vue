@@ -4,11 +4,19 @@ import { api } from "./api";
 import type { BlockMsg } from "./types";
 import { fmtGwei, fmtNum } from "./format";
 import { builderName } from "./builders";
+import { usePageMeta } from "./usePageMeta";
 import AgeTime from "./components/AgeTime.vue";
 
 const blocks = ref<BlockMsg[]>([]);
 const loading = ref(true);
 const exhausted = ref(false);
+
+usePageMeta({
+  title: "Latest Ethereum Blocks · Blazed Explorer",
+  description:
+    "Browse the latest Ethereum blocks in real time: transaction counts, gas usage, base fees, and block builders, streamed live from BLAZED.sh dedicated nodes.",
+  canonicalPath: "/blocks",
+});
 
 async function load(before?: number) {
   loading.value = true;

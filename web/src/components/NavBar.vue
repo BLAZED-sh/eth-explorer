@@ -45,6 +45,16 @@ import SearchBox from "./SearchBox.vue";
         >
           <span class="muted">#</span>{{ fmtNum(store.head) }}
         </router-link>
+        <a
+          href="https://blazed.sh/?utm_source=explorer&utm_medium=referral&utm_campaign=nav_cta"
+          target="_blank"
+          rel="noopener"
+          class="hidden shrink-0 items-center gap-1.5 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-accent transition-colors hover:border-accent/70 hover:bg-accent/20 lg:flex"
+          title="Run your code on the node with BLAZED.sh"
+        >
+          run your bot on the node
+          <span class="text-sm leading-none">↗</span>
+        </a>
       </div>
     </div>
   </header>

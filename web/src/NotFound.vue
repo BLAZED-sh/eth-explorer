@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
+import { usePageMeta } from "./usePageMeta";
+
+usePageMeta({
+  title: "Page Not Found · Blazed Explorer",
+  description: "Nothing exists at this path on Blazed Explorer.",
+  canonicalPath: null,
+  robots: "noindex, nofollow",
+});
 
 // Matrix-style scramble that decodes to "404".
 const text = ref("");

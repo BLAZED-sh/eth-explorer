@@ -212,7 +212,21 @@ func (s *Server) handleBlockDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	block, err := s.st.BlockByNumber(num)
 	if err != nil {
-		writeErr(w, http.StatusNotFound, "block not found")
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			writeErr(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		// Pruned or never ingested; ask the node so any historical block
+		// resolves. Old blocks are immutable, hence the long cache.
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+		bm, lites, ferr := s.feed.FetchBlock(ctx, num)
+		if ferr != nil || bm == nil {
+			writeErr(w, http.StatusNotFound, "block not found")
+			return
+		}
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		writeJSON(w, http.StatusOK, map[string]any{"block": bm, "txs": lites})
 		return
 	}
 	txs, err := s.st.BlockTxs(num)

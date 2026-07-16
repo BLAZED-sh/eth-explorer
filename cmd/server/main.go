@@ -63,7 +63,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    cfg.ListenAddr,
-		Handler: api.NewServer(st, feed, hub, dist, cfg.AllowOrigins),
+		Handler: api.NewServer(st, feed, hub, dist, cfg.AllowOrigins, cfg.SiteURL),
 	}
 	go func() {
 		<-ctx.Done()

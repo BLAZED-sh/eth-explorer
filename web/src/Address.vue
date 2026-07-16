@@ -3,7 +3,8 @@ import { computed, defineAsyncComponent, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { api } from "./api";
 import type { ContractCode, TxLite } from "./types";
-import { fmtBytes, fmtEth } from "./format";
+import { fmtBytes, fmtEth, shortAddr } from "./format";
+import { usePageMeta } from "./usePageMeta";
 import HashLink from "./components/HashLink.vue";
 import TxTable from "./components/TxTable.vue";
 
@@ -17,6 +18,15 @@ const nextCursor = ref<number | null>(null);
 const loading = ref(true);
 
 const code = ref<ContractCode | null>(null);
+
+usePageMeta(() => {
+  const isContract = code.value?.isContract ?? false;
+  return {
+    title: `${isContract ? "Ethereum Contract" : "Ethereum Address"} ${shortAddr(address.value, 8, 6)} · Blazed Explorer`,
+    description: `Transactions, balance activity, and ${isContract ? "contract bytecode with decompilation" : "account details"} for Ethereum address ${address.value} on Blazed Explorer.`,
+    canonicalPath: `/address/${address.value}`,
+  };
+});
 
 // Keep the first paint light; "load more" pulls larger pages.
 const INITIAL_LIMIT = 10;
