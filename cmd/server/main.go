@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
 
@@ -61,9 +62,16 @@ func main() {
 		log.Fatal().Err(err).Msg("embedded frontend missing")
 	}
 
+	var blockedUA *regexp.Regexp
+	if cfg.BlockedUA != "" {
+		if blockedUA, err = regexp.Compile(cfg.BlockedUA); err != nil {
+			log.Fatal().Err(err).Msg("invalid BLOCKED_UA")
+		}
+	}
+
 	srv := &http.Server{
 		Addr:    cfg.ListenAddr,
-		Handler: api.NewServer(st, feed, hub, dist, cfg.AllowOrigins, cfg.SiteURL),
+		Handler: api.NewServer(st, feed, hub, dist, cfg.AllowOrigins, cfg.SiteURL, blockedUA),
 	}
 	go func() {
 		<-ctx.Done()

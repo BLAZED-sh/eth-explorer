@@ -1,11 +1,16 @@
 package api
 
 import (
+	"bufio"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/fipso/blazed-explorer/internal/ingest"
 	"github.com/fipso/blazed-explorer/internal/store"
@@ -19,7 +24,7 @@ type Server struct {
 	siteURL   string
 }
 
-func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allowOrigins []string, siteURL string) http.Handler {
+func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allowOrigins []string, siteURL string, blockedUA *regexp.Regexp) http.Handler {
 	s := &Server{
 		st:        st,
 		feed:      feed,
@@ -46,7 +51,60 @@ func NewServer(st *store.Store, feed *ingest.Feed, hub *Hub, webDist fs.FS, allo
 	mux.HandleFunc("GET /sitemap-blocks.xml", s.handleBlocksSitemap)
 	mux.Handle("GET /", s.spaHandler(webDist))
 
-	return corsMiddleware(allowOrigins, mux)
+	return logMiddleware(blockUAMiddleware(blockedUA, corsMiddleware(allowOrigins, mux)))
+}
+
+// logMiddleware logs one line per request. The swarm ingress hides client
+// IPs, so the User-Agent is the only way to tell crawlers apart.
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/healthz" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		start := time.Now()
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(rec, r)
+		log.Info().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Int("status", rec.status).
+			Dur("dur", time.Since(start)).
+			Str("ua", r.UserAgent()).
+			Msg("req")
+	})
+}
+
+// blockUAMiddleware rejects requests whose User-Agent matches re (BLOCKED_UA).
+func blockUAMiddleware(re *regexp.Regexp, next http.Handler) http.Handler {
+	if re == nil {
+		return next
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if re.MatchString(r.UserAgent()) {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func (r *statusRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
+
+// Hijack is required by gorilla/websocket, which type-asserts http.Hijacker.
+func (r *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	r.status = http.StatusSwitchingProtocols
+	return http.NewResponseController(r.ResponseWriter).Hijack()
 }
 
 // corsMiddleware adds CORS headers (and answers preflight requests) for the

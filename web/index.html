@@ -16,6 +16,10 @@
       }]);
       (function(w,d,s,l,i){
         if (!i || i.indexOf('GTM-') !== 0) return;
+        // Keep crawlers out of GA: automation, bot UAs, and UAs with no OS token.
+        var ua = navigator.userAgent || '';
+        if (navigator.webdriver || /bot\b|crawl|spider|slurp|headless|compatible;/i.test(ua) ||
+            !/Windows|Macintosh|Linux|Android|iPhone|iPad|CrOS/.test(ua)) return;
         w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
         var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
         j.async=true;j.src='https://sg.blazed.sh/gtm.js?id='+i+dl;

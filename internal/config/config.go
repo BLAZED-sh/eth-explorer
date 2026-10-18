@@ -19,6 +19,8 @@ type Config struct {
 	// SiteURL is the public origin URLs in generated sitemaps (and host
 	// comparisons) are built against, without a trailing slash.
 	SiteURL string
+	// BlockedUA is a regexp; requests with a matching User-Agent get 403.
+	BlockedUA string
 
 	// TLS / ACME. Explicit cert files take precedence; otherwise, when
 	// ACMEEnabled, a cert is obtained via a manual dns-01 flow and cached.
@@ -43,6 +45,7 @@ func Load() Config {
 		MaxPool:      getenvInt("MAX_POOL", 10000),
 		AllowOrigins: getenvList("ALLOW_ORIGINS"),
 		SiteURL:      strings.TrimSuffix(getenv("SITE_URL", "https://explorer.blazed.sh"), "/"),
+		BlockedUA:    os.Getenv("BLOCKED_UA"),
 
 		TLSCertFile:   os.Getenv("TLS_CERT_FILE"),
 		TLSKeyFile:    os.Getenv("TLS_KEY_FILE"),
